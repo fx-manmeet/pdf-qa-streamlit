@@ -93,7 +93,7 @@ def main():
         if query:
             
             
-            retriever = vectorstore.as_retriever(search_kwargs={'k': 3})    #retrive top 3 chunks
+            retriever = vectorstore.as_retriever(search_kwargs={'k': 3})    #retrive top 3
 
             
             qa = RetrievalQA.from_chain_type(llm=llm,
