@@ -7,20 +7,18 @@ from langchain_community.vectorstores import Chroma
 from langchain.schema import Document
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
-from groq import Groq
 from langchain.prompts import PromptTemplate
-from langchain.chains.question_answering import load_qa_chain
 from langchain_groq import ChatGroq
 import os
 
-with st.sidebar:
+with st.sidebar:                    #discription of app
     st.title('PDF Chat App')
     st.markdown('''
     ## About
     This app is an LLM-powered chatbot built using:
     - [Streamlit](https://streamlit.io/)
     - [LangChain](https://python.langchain.com/)
-    - [Gorq-mixtral-8x7b-32768](https://platform.openai.com/docs/models) LLM model
+    - [Gorq-mixtral-8x7b-32768 LLM model](https://console.groq.com/docs/libraries) 
  
     ''')
 
@@ -28,15 +26,15 @@ with st.sidebar:
     st.write('Ask anything!')
 
 load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")                   #save key in .env file
 
-text_splitter = RecursiveCharacterTextSplitter(
+text_splitter = RecursiveCharacterTextSplitter(            #chunking function
             chunk_size=1000,
             chunk_overlap=200,
             length_function=len
             )
-
-llm = ChatGroq(temperature=0,
+  
+llm = ChatGroq(temperature=0,                              #llm model 
                           model_name="mixtral-8x7b-32768",
                           api_key=GROQ_API_KEY)
 
@@ -66,7 +64,7 @@ def main():
         # st.write(pdfreader)
 
         text = ""
-        for page in pdfreader.pages:
+        for page in pdfreader.pages:           #extract text from pdf
             text+=page.extract_text()
 
         # st.write(text)
@@ -76,26 +74,26 @@ def main():
         docs = [Document(page_content=chunk) for chunk in chunks]  #chromadb likes it in doc
         # st.write(chunks)
         
-        storename=pdf.name[:-4]
-        if os.path.exists(f"chroma_db_llamaparse{storename}"):
+        storename=pdf.name[:-4]       #name of the pdf for recognition
+        if os.path.exists(f"chroma_db_llamaparse{storename}"):  #load the vector database if already exists for particular file
             vectorstore = Chroma(embedding_function=embed_model,
                          persist_directory=f"chroma_db_llamaparse{storename}",
                          collection_name=f"rag1{storename}")
-            st.write('Embeddings Loaded from the Disk')
+            # st.write('Embeddings Loaded from the Disk')
         else:
-            vectorstore = Chroma.from_documents(
+            vectorstore = Chroma.from_documents(                #create vector data store for new file
             documents=docs,
             embedding=embed_model,
             persist_directory=f"chroma_db_llamaparse{storename}",
             collection_name=f"rag1{storename}")
 
 
-        query = st.text_input("Ask questions about your PDF file:")
+        query = st.text_input("Ask questions about your PDF file:") 
 
         if query:
             
             
-            retriever = vectorstore.as_retriever(search_kwargs={'k': 3})
+            retriever = vectorstore.as_retriever(search_kwargs={'k': 3})    #retrive top 3 chunks
 
             
             qa = RetrievalQA.from_chain_type(llm=llm,
